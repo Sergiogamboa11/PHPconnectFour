@@ -5,11 +5,6 @@
 
 //define('STRATEGY', 'strategy'); // constant    $strategies = array("Smart", "Random"); // supported strategies
 //if (!array_key_exists(STRATEGY, $_GET)) { /* write code here */  exit; }
-//$strategy = $_GET[STRATEGY];
-
-// error_reporting(E_ALL);
-// ini_set('display_errors', 1);
-
 
 class move{
     public $slot = 1; //index of slot
@@ -39,19 +34,6 @@ $pid = htmlspecialchars($_GET["pid"]);
 $move = htmlspecialchars($_GET["move"]);
 $my_file = $pid.'.json';
 
-$array = array(
-    array(0, 1, 2, 3, 4, 5),
-    array(6, 7, 8, 9, 10, 11),
-    array(12, 13, 14, 15, 16, 17),
-    array(18, 19, 20, 21, 22, 23),
-    array(24, 25, 26, 27, 28, 29),
-    array(30, 31, 32, 33, 34, 35),
-    array(36, 37, 38, 39, 40, 41),
-);
-
-
-
-
 if(file_exists($my_file)){
     $handleR = fopen($my_file, 'r') or die('Cannot open file to read: '.$my_file);
     $content = fread($handleR, 500);
@@ -61,7 +43,6 @@ if(file_exists($my_file)){
 else{
     $board = makeBoard();
 }
-
 
 // Acknowledge player move
 for($i = 0; $i < sizeof($board[$move]); $i++){
@@ -75,13 +56,20 @@ for($i = 0; $i < sizeof($board[$move]); $i++){
     }
 }
 
-
 //Make random move
-$randomnum = rand(0, 6);
+// $randomnum = rand(0, 6);
+$randomnum = 1;
+while(isColFull($randomnum, $board)){
+    $randomnum = rand(0, 6);
+}
+
 for($i = 0; $i < sizeof($board[$randomnum]); $i++){
     if($board[$randomnum][$i] == 0){
         $board[$randomnum][$i] = 2;
         $u->move-> slot = $randomnum;
+        if (winChecker($randomnum, $i, $board, 2)) {//player 2 is server
+            $u->move->isWin = true;
+        }
         break;
     }
 }
@@ -92,7 +80,13 @@ fwrite($handle, json_encode($board));
 fclose($handle);
 
 echo json_encode($u); // Important output
+// echo isColFull($randomnum, $board);
 
+
+/**
+ * Creates an empty 2d array representing the board
+ * @return number[][] The 2d array representing the board
+ */
 function makeBoard(){
     $board = array(
         array(0, 0, 0, 0, 0, 0),
@@ -106,6 +100,16 @@ function makeBoard(){
     return $board;
 }
 
+function makeMove($input){
+}
+
+/**
+ * @param int $x The x coordinate of the slot
+ * @param int $y The y coordinate of the slot
+ * @param int[][] $board The game's current board
+ * @param int $player The player's number (1 for user, 2 for server)
+ * @return boolean Returns true if a player has won, false otherwise
+ */
 function winChecker($x, $y, $board, $player){
     $total = 0;
     for($cols = $y; $cols < sizeof($board[$x]); $cols++){ //vertical check
@@ -156,7 +160,6 @@ function winChecker($x, $y, $board, $player){
             else
                 break;
         }
-
     }
     for($cols = $y, $count = 0; $cols < sizeof($board[$x]); $cols--, $count++){
         if(sizeof($board) > $board[$x-$count][$cols]){
@@ -166,12 +169,10 @@ function winChecker($x, $y, $board, $player){
             else
                 break;
         }
-
     }
     if($total>=5){
         return true;
     }
-    
     
     $total = 0;
     for($cols = $y, $count = 0; $cols < sizeof($board[$x]); $cols++, $count++){ //diagonal 1
@@ -182,7 +183,6 @@ function winChecker($x, $y, $board, $player){
             else
                 break;
         }
-        
     }
     for($cols = $y, $count = 0; $cols < sizeof($board[$x]); $cols--, $count++){
         if(sizeof($board) > $board[$x+$count][$cols]){
@@ -192,16 +192,28 @@ function winChecker($x, $y, $board, $player){
             else
                 break;
         }
-        
     }
     if($total>=5){
         return true;
     }
     
-    
-    
     return false;
-    
+}
+
+/**
+ * This method checks if the specifies col is filled
+ * @param int $col Number of the column
+ * @param int[][] $board The game's current board
+ * @return boolean True if column is full, false otherwise
+ */
+function isColFull($col, $board){
+    if($board[$col][sizeof($board[$col])-1] != 0)
+        return true;
+    return false;
+}
+
+function isBoardFull(){
+    return true;
 }
 
 ?>

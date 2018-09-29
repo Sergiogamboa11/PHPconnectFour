@@ -2,17 +2,18 @@
 
 class NewGame {
     public $response = false;
-    public $pid = 0;
+    public $pid = "";
 }
 
 $strat = htmlspecialchars($_GET["strategy"]);
-if ($strat == "Smart") {
-    //echo "works!";
-}
-
 $u = new NewGame();
 $u->response = true;
-$u->pid = uniqid();
+if ($strat == "Smart") {
+    $u->pid = "Smrt".uniqid();
+}
+if ($strat == "Random") {
+    $u->pid = "Rndm".uniqid();
+}
 
 echo json_encode($u)
 ?>
