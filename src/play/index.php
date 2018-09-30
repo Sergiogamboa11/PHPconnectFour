@@ -34,17 +34,17 @@ $pid = htmlspecialchars($_GET["pid"]);
 $move = htmlspecialchars($_GET["move"]);
 $my_file = $pid.'.json';
 
-if(file_exists($my_file)){
+if(file_exists($my_file)){ //If game already exists, retrieve board
     $handleR = fopen($my_file, 'r') or die('Cannot open file to read: '.$my_file);
     $content = fread($handleR, 500);
     $board = json_decode($content);
     fclose($handleR);
 }
-else{
+else{ //Otherwise create new board
     $board = makeBoard();
 }
 
-// Acknowledge player move
+// Update board with player move
 for($i = 0; $i < sizeof($board[$move]); $i++){
     if($board[$move][$i] == 0){
         $board[$move][$i] = 1;
@@ -56,13 +56,23 @@ for($i = 0; $i < sizeof($board[$move]); $i++){
     }
 }
 
+$randomnum = 0;
+if (strpos($pid, 'Rndm') !== FALSE){
 //Make random move
-// $randomnum = rand(0, 6);
-$randomnum = 1;
-while(isColFull($randomnum, $board)){
     $randomnum = rand(0, 6);
+    while(isColFull($randomnum, $board)){ //if column is filled, roll a new number
+        $randomnum = rand(0, 6);
+    }
+}
+else if (strpos($pid, 'Smrt') !== FALSE){
+    $randomnum = smartNumber($board);
+//     while(isColFull($randomnum, $board)){ //if column is filled, roll a new number
+//         $randomnum = rand(0, 6);
+//     }
+    smartNumber($board);
 }
 
+//Update board with server move
 for($i = 0; $i < sizeof($board[$randomnum]); $i++){
     if($board[$randomnum][$i] == 0){
         $board[$randomnum][$i] = 2;
@@ -74,18 +84,16 @@ for($i = 0; $i < sizeof($board[$randomnum]); $i++){
     }
 }
 
-// echo $my_file;
+//Write board changes to file
 $handle = fopen($my_file, 'w') or die('Cannot open file to write: '.$my_file);
 fwrite($handle, json_encode($board));
 fclose($handle);
 
-echo json_encode($u); // Important output
-// echo isColFull($randomnum, $board);
-
+echo json_encode($u); // json output
 
 /**
- * Creates an empty 2d array representing the board
- * @return number[][] The 2d array representing the board
+ * Creates an int[][] representing the board
+ * @return int[][] The 2d array representing the board
  */
 function makeBoard(){
     $board = array(
@@ -214,6 +222,42 @@ function isColFull($col, $board){
 
 function isBoardFull(){
     return true;
+}
+
+function smartNumber($board){
+    $num = rand(0,6);
+    $win = false;
+    for($c = 0; $c < sizeof($board); $c++){ //Check if player 1 is about to win
+        for($i = 0; $i < sizeof($board[$c]); $i++){
+            if($board[$c][$i] == 0){
+             $board[$c][$i] = 1;
+             $win = winChecker($c, $i, $board, 1); 
+             $board[$c][$i] = 0;
+             break;
+            }
+        }
+        if($win == true){
+            $num = $c;
+            return $num;
+        }
+    }
+    
+    for($c = 0; $c < sizeof($board); $c++){ //check if player 2 can make a winning move
+        for($i = 0; $i < sizeof($board[$c]); $i++){
+            if($board[$c][$i] == 0){
+                $board[$c][$i] = 2;
+                $win = winChecker($c, $i, $board, 2);
+                $board[$c][$i] = 0;
+                break;
+            }
+        }
+        if($win == true){
+            $num = $c;
+            return $num;
+        }
+    }
+
+    return $num;
 }
 
 ?>
