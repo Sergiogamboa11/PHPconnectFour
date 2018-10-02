@@ -7,13 +7,47 @@ class NewGame {
 
 $strat = htmlspecialchars($_GET["strategy"]);
 $u = new NewGame();
-$u->response = true;
+
 if ($strat == "Smart") {
+    $u->response = true;
     $u->pid = "Smrt".uniqid();
 }
-if ($strat == "Random") {
+else if ($strat == "Random") {
+    $u->response = true;
     $u->pid = "Rndm".uniqid();
 }
+else if ($strat == "") {
+    unset($u->pid);
+    $u->reason = "Strategy not specified";
+}
+else{
+    unset($u->pid);
+    $u->reason = "Unknown strategy";
+}
 
-echo json_encode($u)
+if($u->response == true){
+    $my_file = '../play/'.$u->pid.'.json';
+    $handle = fopen($my_file, 'w') or die('Cannot open file to write: '.$my_file);
+    $board = makeBoard();
+    fwrite($handle, json_encode($board));
+}
+
+echo json_encode($u);
+
+/**
+ * Creates an int[][] representing the board
+ * @return int[][] The 2d array representing the board
+ */
+function makeBoard(){
+    $board = array(
+        array(0, 0, 0, 0, 0, 0),
+        array(0, 0, 0, 0, 0, 0),
+        array(0, 0, 0, 0, 0, 0),
+        array(0, 0, 0, 0, 0, 0),
+        array(0, 0, 0, 0, 0, 0),
+        array(0, 0, 0, 0, 0, 0),
+        array(0, 0, 0, 0, 0, 0),
+    );
+    return $board;
+}
 ?>

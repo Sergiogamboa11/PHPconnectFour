@@ -34,6 +34,21 @@ $pid = htmlspecialchars($_GET["pid"]);
 $move = htmlspecialchars($_GET["move"]);
 $my_file = $pid.'.json';
 
+if ($pid == "") {
+    $u->response = false;
+    unset($u->move);
+    unset($u->ack_move);
+    $u->reason = "Pid not specified";
+    goto a;
+}
+if ($move == "") {
+    $u->response = false;
+    unset($u->move);
+    unset($u->ack_move);
+    $u->reason = "Move not specified";
+    goto a;
+}
+
 if(file_exists($my_file)){ //If game already exists, retrieve board
     $handleR = fopen($my_file, 'r') or die('Cannot open file to read: '.$my_file);
     $content = fread($handleR, 500);
@@ -41,7 +56,12 @@ if(file_exists($my_file)){ //If game already exists, retrieve board
     fclose($handleR);
 }
 else{ //Otherwise create new board
-    $board = makeBoard();
+//     $board = makeBoard();
+    $u->response = false;
+    unset($u->move);
+    unset($u->ack_move);
+    $u->reason = "Unknown pid";
+    goto a;
 }
 
 // Update board with player move
@@ -57,18 +77,17 @@ for($i = 0; $i < sizeof($board[$move]); $i++){
 }
 
 $randomnum = 0;
-if (strpos($pid, 'Rndm') !== FALSE){
-//Make random move
+if (strpos($pid, 'Rndm') !== FALSE){//Make random move
     $randomnum = rand(0, 6);
     while(isColFull($randomnum, $board)){ //if column is filled, roll a new number
         $randomnum = rand(0, 6);
     }
 }
-else if (strpos($pid, 'Smrt') !== FALSE){
+else if (strpos($pid, 'Smrt') !== FALSE){ //Make smart move
     $randomnum = smartNumber($board);
-//     while(isColFull($randomnum, $board)){ //if column is filled, roll a new number
-//         $randomnum = rand(0, 6);
-//     }
+     while(isColFull($randomnum, $board)){ //if column is filled, roll a new number
+         $randomnum = rand(0, 6);
+     }
     smartNumber($board);
 }
 
@@ -84,29 +103,18 @@ for($i = 0; $i < sizeof($board[$randomnum]); $i++){
     }
 }
 
+
 //Write board changes to file
 $handle = fopen($my_file, 'w') or die('Cannot open file to write: '.$my_file);
 fwrite($handle, json_encode($board));
 fclose($handle);
 
-echo json_encode($u); // json output
-
-/**
- * Creates an int[][] representing the board
- * @return int[][] The 2d array representing the board
- */
-function makeBoard(){
-    $board = array(
-        array(0, 0, 0, 0, 0, 0),
-        array(0, 0, 0, 0, 0, 0),
-        array(0, 0, 0, 0, 0, 0),
-        array(0, 0, 0, 0, 0, 0),
-        array(0, 0, 0, 0, 0, 0),
-        array(0, 0, 0, 0, 0, 0),
-        array(0, 0, 0, 0, 0, 0),
-    );
-    return $board;
+if( $u->ack_move->isWin == false && $u->move->isWin == false){
+    $u->ack_move->isDraw = $u->move->isDraw = drawCheck($board);
 }
+
+a:
+    echo json_encode($u); // json output
 
 function makeMove($input){
 }
@@ -220,8 +228,17 @@ function isColFull($col, $board){
     return false;
 }
 
-function isBoardFull(){
-    return true;
+function drawCheck($board){
+    $numFull = 0;
+    for($c = 0; $c < sizeof($board); $c++){
+        if(isColFull($c, $board) == true){
+            $numFull ++;
+        }
+    }
+    if($numFull > 6){
+        return true;
+    }
+    else return false;
 }
 
 function smartNumber($board){
