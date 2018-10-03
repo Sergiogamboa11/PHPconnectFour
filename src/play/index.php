@@ -62,8 +62,10 @@ for($i = 0; $i < sizeof($board[$move]); $i++){
     if($board[$move][$i] == 0){
         $board[$move][$i] = 1;
         $u->ack_move->slot = $move;
-        if (winChecker($move, $i, $board, 1)) {//player 1 is user
+        $winResult = winChecker($move, $i, $board, 1);
+        if (array_shift($winResult)) {//player 2 is server
             $u->ack_move->isWin = true;
+            $u->ack_move->win = $winResult;
         }
         break;
     }
@@ -89,13 +91,14 @@ for($i = 0; $i < sizeof($board[$randomnum]); $i++){
     if($board[$randomnum][$i] == 0){
         $board[$randomnum][$i] = 2;
         $u->move-> slot = $randomnum;
-        if (winChecker($randomnum, $i, $board, 2)) {//player 2 is server
-            $u->move->isWin = true;
-        }
+         $winResult = winChecker($randomnum, $i, $board, 2);
+         if (array_shift($winResult)) {//player 2 is server
+             $u->move->win = $winResult;
+             $u->move->isWin = true;
+         }
         break;
     }
 }
-
 
 //Write board changes to file
 $handle = fopen($my_file, 'w') or die('Cannot open file to write: '.$my_file);
@@ -109,60 +112,76 @@ if( $u->ack_move->isWin == false && $u->move->isWin == false){
 a:
     echo json_encode($u); // json output
 
-function makeMove($input){
-}
-
 /**
+ * This function checks for win conditions and returns an array with a true
+ * or false in the first index, and if true, the coordinates of the winning row
+ * in the rest of the array
  * @param int $x The x coordinate of the slot
  * @param int $y The y coordinate of the slot
  * @param int[][] $board The game's current board
  * @param int $player The player's number (1 for user, 2 for server)
- * @return boolean Returns true if a player has won, false otherwise
+ * @return array $array Containing true in the first index if player won with the coordinates of winning row following, and false otherwise
  */
 function winChecker($x, $y, $board, $player){
+    $array = array();
     $total = 0;
     for($cols = $y; $cols < sizeof($board[$x]); $cols++){ //vertical check
         if($board[$x][$cols] == $player){
             $total+=1;
+            array_push($array, $x, $cols);
         }
         else
             break;
     }
     for($cols = $y; $cols < sizeof($board[$x]); $cols--){
         if($board[$x][$cols] == $player){
-            $total+=1;
+            if($cols != $y){
+                array_push($array, $x, $cols);
+                $total+=1;
+            }
         }
         else{
             break;
         }
     }
-    if($total>=5){
-        return true;
+    if($total>=4){
+        array_unshift($array, true); //works
+        return $array;
     }
+    
+    $array = array();
     $total = 0;
     for($rows = $x; $rows < sizeof($board); $rows++){ //horizontal check
         if($board[$rows][$y] == $player){
             $total+=1;
+            array_push($array, $rows, $y);
         }
         else
             break;
     }
     for($rows = $x; $rows < sizeof($board); $rows--){
         if($board[$rows][$y] == $player){
-            $total+=1;
+            if($rows != $x){
+                array_push($array, $rows, $y);
+                $total+=1;
+            }
         }
         else{
             break;
         }
     }
-    if($total>=5){
-        return true;
+    if($total>=4){
+        array_unshift($array, true); //works
+        return $array;
     }
+    
+    $array = array();
     $total = 0;
-    for($cols = $y, $count = 0; $cols < sizeof($board[$x]); $cols++, $count++){ //diagonal 1
+    for($cols = $y, $count = 0; $cols < sizeof($board[$x]); $cols++, $count++){ //diagonal /
         if(sizeof($board) > $board[$x+ $count][$cols]){
             if($board[$x+ $count][$cols] == $player){
-                $total+=1;
+                    array_push($array, $x+ $count, $cols);
+                    $total+=1;
             }
             else
                 break;
@@ -171,19 +190,26 @@ function winChecker($x, $y, $board, $player){
     for($cols = $y, $count = 0; $cols < sizeof($board[$x]); $cols--, $count++){
         if(sizeof($board) > $board[$x-$count][$cols]){
             if($board[$x-$count][$cols] == $player){
-                $total+=1;
+                if($cols != $y){
+                    array_push($array, $x- $count, $cols);
+                    $total+=1;
+                }
             }
             else
                 break;
         }
     }
-    if($total>=5){
-        return true;
+    if($total>=4){
+        array_unshift($array, true); //works
+        return $array;
     }
+    
+    $array = array();
     $total = 0;
-    for($cols = $y, $count = 0; $cols < sizeof($board[$x]); $cols++, $count++){ //diagonal 1
+    for($cols = $y, $count = 0; $cols < sizeof($board[$x]); $cols++, $count++){ //diagonal \
         if(sizeof($board) > $board[$x-$count][$cols]){
             if($board[$x-$count][$cols] == $player){
+                array_push($array, $x- $count, $cols);
                 $total+=1;
             }
             else
@@ -193,16 +219,21 @@ function winChecker($x, $y, $board, $player){
     for($cols = $y, $count = 0; $cols < sizeof($board[$x]); $cols--, $count++){
         if(sizeof($board) > $board[$x+$count][$cols]){
             if($board[$x+$count][$cols] == $player){
-                $total+=1;
+                if($cols != $y){
+                    array_push($array, $x+ $count, $cols);
+                    $total+=1;
+                }
             }
             else
                 break;
         }
     }
-    if($total>=5){
-        return true;
-    }
-    return false;
+    if($total>=4){
+        array_unshift($array, true); //works
+        return $array;
+    } 
+    $array = array(false);
+    return $array;
 }
 
 /**
@@ -247,7 +278,7 @@ function smartNumber($board){
         for($i = 0; $i < sizeof($board[$c]); $i++){
             if($board[$c][$i] == 0){
              $board[$c][$i] = 1;
-             $win = winChecker($c, $i, $board, 1); 
+             $win = array_shift(winChecker($c, $i, $board, 1)); 
              $board[$c][$i] = 0;
              break;
             }
@@ -261,7 +292,7 @@ function smartNumber($board){
         for($i = 0; $i < sizeof($board[$c]); $i++){
             if($board[$c][$i] == 0){
                 $board[$c][$i] = 2;
-                $win = winChecker($c, $i, $board, 2);
+                $win = array_shift(winChecker($c, $i, $board, 2));
                 $board[$c][$i] = 0;
                 break;
             }
