@@ -1,11 +1,4 @@
 <?php 
-
-//$home = "http://localhost:8612/ConnectFourPHP/src";
-//$string = @file_get_contents($home . "/info/index.php");
-
-//define('STRATEGY', 'strategy'); // constant    $strategies = array("Smart", "Random"); // supported strategies
-//if (!array_key_exists(STRATEGY, $_GET)) { /* write code here */  exit; }
-
 class move{
     public $slot = 1; //index of slot
     public $isWin = false;
@@ -32,7 +25,7 @@ $u->ack_move = new ack_move();
 
 $pid = htmlspecialchars($_GET["pid"]);
 $move = htmlspecialchars($_GET["move"]);
-$my_file = $pid.'.json';
+$my_file = '../writable/'.$pid.'.json';
 
 if ($pid == "") {
     $u->response = false;
@@ -146,7 +139,6 @@ function winChecker($x, $y, $board, $player){
     if($total>=5){
         return true;
     }
-    
     $total = 0;
     for($rows = $x; $rows < sizeof($board); $rows++){ //horizontal check
         if($board[$rows][$y] == $player){
@@ -166,7 +158,6 @@ function winChecker($x, $y, $board, $player){
     if($total>=5){
         return true;
     }
-    
     $total = 0;
     for($cols = $y, $count = 0; $cols < sizeof($board[$x]); $cols++, $count++){ //diagonal 1
         if(sizeof($board) > $board[$x+ $count][$cols]){
@@ -189,7 +180,6 @@ function winChecker($x, $y, $board, $player){
     if($total>=5){
         return true;
     }
-    
     $total = 0;
     for($cols = $y, $count = 0; $cols < sizeof($board[$x]); $cols++, $count++){ //diagonal 1
         if(sizeof($board) > $board[$x-$count][$cols]){
@@ -212,7 +202,6 @@ function winChecker($x, $y, $board, $player){
     if($total>=5){
         return true;
     }
-    
     return false;
 }
 
@@ -228,6 +217,11 @@ function isColFull($col, $board){
     return false;
 }
 
+/**
+ * This method checks if there has been a draw
+ * @param int[][] $board The game's current board
+ * @return boolean True if there's a draw, false otherwise
+ */
 function drawCheck($board){
     $numFull = 0;
     for($c = 0; $c < sizeof($board); $c++){
@@ -241,6 +235,11 @@ function drawCheck($board){
     else return false;
 }
 
+/**
+ * This method picks a move for the Smart strategy
+ * @param int[][] $board The game's current board
+ * @return number The number of the col to make a move on
+ */
 function smartNumber($board){
     $num = rand(0,6);
     $win = false;
@@ -258,7 +257,6 @@ function smartNumber($board){
             return $num;
         }
     }
-    
     for($c = 0; $c < sizeof($board); $c++){ //check if player 2 can make a winning move
         for($i = 0; $i < sizeof($board[$c]); $i++){
             if($board[$c][$i] == 0){
@@ -273,7 +271,6 @@ function smartNumber($board){
             return $num;
         }
     }
-
     return $num;
 }
 

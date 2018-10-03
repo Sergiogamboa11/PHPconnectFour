@@ -1,5 +1,4 @@
 <?php
-
 class NewGame {
     public $response = false;
     public $pid = "";
@@ -26,7 +25,7 @@ else{
 }
 
 if($u->response == true){
-    $my_file = '../play/'.$u->pid.'.json';
+    $my_file = '../writable/'.$u->pid.'.json';
     $handle = fopen($my_file, 'w') or die('Cannot open file to write: '.$my_file);
     $board = makeBoard();
     fwrite($handle, json_encode($board));
@@ -36,7 +35,7 @@ echo json_encode($u);
 
 /**
  * Creates an int[][] representing the board
- * @return int[][] The 2d array representing the board
+ * @return int[][] The populated int[][] representing the board
  */
 function makeBoard(){
     $board = array(
