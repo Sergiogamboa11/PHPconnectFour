@@ -1,3 +1,7 @@
+/**
+* @author Sergio Gamboa
+*/
+
 <?php 
 class move{
     public $slot = 1; //index of slot

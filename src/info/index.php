@@ -1,3 +1,7 @@
+/**
+* @author Sergio Gamboa
+*/
+
 <?php
 class Info {
     public $width = "";

@@ -1,3 +1,7 @@
+/**
+* @author Sergio Gamboa
+*/
+
 <?php
 class NewGame {
     public $response = false;
