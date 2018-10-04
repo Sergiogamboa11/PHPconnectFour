@@ -10,7 +10,7 @@ class ack_move{
     public $slot = 1; //index of slot
     public $isWin = false;
     public $isDraw = false;
-    public $win = array();
+    public $row = array();
 }
 
 class Play{
@@ -41,6 +41,13 @@ if ($move == "") {
     $u->reason = "Move not specified";
     goto a;
 }
+if ($move < 0 || $move > 6) {
+    $u->response = false;
+    unset($u->move);
+    unset($u->ack_move);
+    $u->reason = "Invalid move";
+    goto a;
+}
 
 if(file_exists($my_file)){ //If game already exists, retrieve board
     $handleR = fopen($my_file, 'r') or die('Cannot open file to read: '.$my_file);
@@ -65,7 +72,7 @@ for($i = 0; $i < sizeof($board[$move]); $i++){
         $winResult = winChecker($move, $i, $board, 1);
         if (array_shift($winResult)) {//player 2 is server
             $u->ack_move->isWin = true;
-            $u->ack_move->win = $winResult;
+            $u->ack_move->row = $winResult;
         }
         break;
     }
@@ -93,7 +100,7 @@ for($i = 0; $i < sizeof($board[$randomnum]); $i++){
         $u->move-> slot = $randomnum;
          $winResult = winChecker($randomnum, $i, $board, 2);
          if (array_shift($winResult)) {//player 2 is server
-             $u->move->win = $winResult;
+             $u->move->row = $winResult;
              $u->move->isWin = true;
          }
         break;
