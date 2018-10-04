@@ -1,8 +1,7 @@
-/**
-* @author Sergio Gamboa
-*/
-
 <?php
+/**
+ * @author Sergio Gamboa
+ */
 class NewGame {
     public $response = false;
     public $pid = "";

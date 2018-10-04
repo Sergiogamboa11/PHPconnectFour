@@ -1,8 +1,7 @@
-/**
-* @author Sergio Gamboa
-*/
-
 <?php 
+/**
+ * @author Sergio Gamboa
+ */
 class move{
     public $slot = 1; //index of slot
     public $isWin = false;
